@@ -208,17 +208,12 @@
             <h1>PLAYER BUZZER</h1>
         </div>
 
-        <div id="player-form" class="player-form">
-            <h2>Masuk ke Game</h2>
-            <div>
-                <input type="text" id="player-name" placeholder="Nama Player" required>
+                <div id="player-form" class="player-form">
+            <h2>Pilih Tim</h2>
+            <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
+                <button class="team-btn" data-team="1">Masuk Tim A</button>
+                <button class="team-btn" data-team="2">Masuk Tim B</button>
             </div>
-            <div class="team-selector">
-                <h3>Pilih Tim:</h3>
-                <button class="team-btn selected" data-team="1">Tim 1</button>
-                <button class="team-btn" data-team="2">Tim 2</button>
-            </div>
-            <button id="join-btn">Masuk</button>
         </div>
 
         <div class="buzzer-container">
@@ -235,15 +230,13 @@
     <script>
         let ws;
         let currentTeam = "1";
-        let playerName = "";
+        let playerName = null;
         let isConnected = false;
         let isManualLogout = false;
 
         const playerForm = document.getElementById('player-form');
         const buzzerBtn = document.getElementById('buzzer');
         const statusDiv = document.getElementById('status');
-        const joinBtn = document.getElementById('join-btn');
-        const playerNameInput = document.getElementById('player-name');
         const teamButtons = document.querySelectorAll('.team-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
@@ -253,10 +246,6 @@
             const data = JSON.parse(savedPlayer);
             playerName = data.name;
             currentTeam = data.team;
-            playerNameInput.value = playerName;
-            teamButtons.forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.team === currentTeam);
-            });
             // Auto connect if we have saved data
             connectToGame(true);
         }
@@ -264,28 +253,21 @@
         // Team selection
         teamButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                teamButtons.forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
                 currentTeam = btn.dataset.team;
-                buzzerBtn.className = `buzzer team${currentTeam}${buzzerBtn.disabled ? ' disabled' : ''}`;
+                // Generate player name based on team
+                playerName = `Player ${currentTeam === "1" ? "A" : "B"}-${Math.floor(Math.random() * 1000)}`;
+                connectToGame(false);
             });
         });
 
-        joinBtn.addEventListener('click', () => connectToGame(false));
-        playerNameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                connectToGame(false);
-            }
-        });
         logoutBtn.addEventListener('click', handleLogout);
 
         function connectToGame(isReconnect) {
+            if (!isReconnect && !playerName) {
+                console.error('No player name generated');
+                return;
+            }
             if (!isReconnect) {
-                playerName = playerNameInput.value.trim();
-                if (!playerName) {
-                    alert('Masukkan nama player!');
-                    return;
-                }
                 // Save player data
                 localStorage.setItem('playerData', JSON.stringify({
                     name: playerName,
@@ -294,7 +276,7 @@
             }
 
             statusDiv.style.display = 'block';
-            statusDiv.textContent = 'Menghubungkan ke server...';
+            statusDiv.textContent = `Menghubungkan ke server sebagai Tim ${currentTeam === "1" ? "A" : "B"}...`;
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.hostname}:${window.location.port || '3000'}`;
@@ -315,7 +297,8 @@
 
                     playerForm.style.display = 'none';
                     buzzerBtn.style.display = 'block';
-                    statusDiv.textContent = `Terhubung ke game! (Tim ${currentTeam})`;
+                    buzzerBtn.className = `buzzer team${currentTeam}`;
+                    statusDiv.textContent = `Terhubung ke game sebagai Tim ${currentTeam === "1" ? "A" : "B"}!`;
                     logoutBtn.style.display = 'block';
                 };
 
@@ -428,11 +411,7 @@
             statusDiv.style.color = '#ffffff';
 
             // Reset inputs and selection
-            playerNameInput.value = '';
             currentTeam = '1';
-            teamButtons.forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.team === currentTeam);
-            });
             buzzerBtn.className = `buzzer team${currentTeam}`;
 
             // Close websocket if open

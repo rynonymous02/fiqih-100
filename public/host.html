@@ -345,39 +345,14 @@
         let ws;
         let currentRound = 1;
         let gameState = {
-            currentQuestion: "",
-            answers: [],
             team1: { points: 0, strikes: 0 },
             team2: { points: 0, strikes: 0 },
-            roundPoints: 0,
-            buzzerEnabled: false
+            currentQuestion: null,
+            answers: [],
+            buzzerEnabled: false,
+            activeTeam: null,
+            roundPoints: 0
         };
-
-        // Add file upload handler
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const questions = JSON.parse(e.target.result);
-                    // Validate questions format
-                    if (Array.isArray(questions) && questions.length > 0) {
-                        ws.send(JSON.stringify({
-                            type: 'uploadQuestions',
-                            questions: questions
-                        }));
-                        showStatus('Questions uploaded successfully!', 'success');
-                    } else {
-                        showStatus('Invalid questions format!', 'error');
-                    }
-                } catch (error) {
-                    showStatus('Error parsing questions file!', 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
 
         // Connect to WebSocket server
         function connectWebSocket() {

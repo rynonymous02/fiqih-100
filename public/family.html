@@ -354,13 +354,9 @@
 
 <body>
   <div class="container">
-    <div id="connection-form" style="text-align: center; margin: 20px 0; padding: 20px; background-color: #004488; border-radius: 10px;">
-      <h2>Connect to Game Server</h2>
-      <div style="margin: 10px 0;">
-        <input type="text" id="server-address" placeholder="Server IP (contoh: 192.168.1.5)" style="padding: 8px; margin: 5px; border: none; border-radius: 5px; width: 200px;" />
-        <input type="text" id="server-port" value="3000" placeholder="Port (default: 3000)" style="padding: 8px; margin: 5px; border: none; border-radius: 5px; width: 200px;" />
-      </div>
-      <button id="connect-btn" style="padding: 8px 16px; background-color: #0055aa; color: white; border: none; border-radius: 5px; cursor: pointer;">Connect</button>
+    <!-- Connection is now automatic; no manual IP input required -->
+    <div id="connection-form" style="display: none; text-align: center; margin: 20px 0; padding: 20px; background-color: #004488; border-radius: 10px;">
+      <h2>Connecting...</h2>
       <div id="connection-status" style="margin-top: 10px; color: yellow;"></div>
     </div>
 
@@ -478,20 +474,11 @@
         roundPoints: 0
     };
     
-    document.getElementById('connect-btn').addEventListener('click', () => {
-        const serverAddress = document.getElementById('server-address').value.trim();
-        const serverPort = document.getElementById('server-port').value.trim() || '3000';
-        
-        if (!serverAddress) {
-            alert('Masukkan alamat IP server');
-            return;
-        }
-        
-        connectWebSocket(serverAddress, serverPort);
-    });
-    
-    function connectWebSocket(serverAddress, serverPort) {
-        const wsUrl = `ws://${serverAddress}:${serverPort}`;
+  // Auto-connect to server using current host and port
+  function connectWebSocket(serverAddress, serverPort) {
+    serverAddress = serverAddress || window.location.hostname;
+    serverPort = serverPort || window.location.port || '3000';
+    const wsUrl = `ws://${serverAddress}:${serverPort}`;
         
         try {
             ws = new WebSocket(wsUrl);
@@ -571,13 +558,15 @@
                 document.getElementById('players-list').innerHTML = '';
             };
             
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                alert('Gagal terhubung ke server. Pastikan alamat IP dan port benar.');
-            };
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) statusEl.textContent = 'Gagal terhubung ke server. Periksa koneksi.';
+      };
         } catch (error) {
             console.error('Error:', error);
-            alert('Gagal membuat koneksi. Periksa alamat IP dan port.');
+      const statusEl = document.getElementById('connection-status');
+      if (statusEl) statusEl.textContent = 'Gagal membuat koneksi.';
         }
     }
 
@@ -891,10 +880,13 @@
       }
     });
 
-    // Inisialisasi game
-    populateQuestionSelector();
-    loadQuestion(0);
-    updateTeamIndicator();
+  // Inisialisasi game
+  populateQuestionSelector();
+  loadQuestion(0);
+  updateTeamIndicator();
+
+  // Start automatic connection to the WebSocket server
+  connectWebSocket();
 
     function playSound(soundType) {
         const sounds = {
