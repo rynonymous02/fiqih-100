@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family 100 - Host/Juri</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #003366;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .game-section {
+            background-color: #004488;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .question-section {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .answer-item {
+            display: grid;
+            grid-template-columns: 50px 1fr auto minmax(130px, auto);
+            align-items: center;
+            gap: 10px;
+            background-color: #0055aa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .answer-number {
+            width: 40px;
+            height: 40px;
+            background-color: #002244;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .answer-text {
+            font-size: 1.2rem;
+        }
+
+        .answer-points {
+            background-color: #002244;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .answer-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .answer-btn {
+            padding: 8px 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            background-color: #00aa00;
+            color: white;
+            min-width: 120px;
+        }
+
+        .answer-btn:hover {
+            background-color: #008800;
+        }
+
+        .control-panel {
+            background-color: #004488;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .team-score {
+            background-color: #002244;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .team-points {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0055aa;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .control-btn.wrong-btn {
+            background-color: #cc0000;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 15px 30px;
+            margin: 10px 0;
+        }
+
+        .control-btn.wrong-btn:hover {
+            background-color: #aa0000;
+        }
+
+        .control-btn:hover {
+            background-color: #0066cc;
+        }
+
+        .strike-count {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .strike {
+            color: red;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .round-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #002244;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #status {
+            grid-column: 1 / -1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        #status.error {
+            background-color: #cc0000;
+        }
+
+        #status.success {
+            background-color: #008800;
+        }
+
+        /* Tambahan style untuk notifikasi buzz */
+        .buzz-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #00aa00;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* Style untuk status buzzer */
+        .buzzer-status {
+            background-color: #002244;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .buzzer-status.active {
+            background-color: #00aa00;
+        }
+
+        .buzzer-status.inactive {
+            background-color: #cc0000;
+        }
+
+        /* Style untuk tim aktif */
+        .team-score.active {
+            border: 2px solid #00aa00;
+        }
+
+        .x-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 10rem;
+            color: red;
+            font-weight: bold;
+            z-index: 100;
+            animation: popup 0.5s forwards, fadeout 0.5s 2.5s forwards;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+        }
+
+        @keyframes popup {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes fadeout {
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="image/fiqih-icon.png" alt="Family 100">
+            <h1>HOST / JURI PANEL</h1>
+        </div>
+
+        <div class="game-section">
+            <div class="question-section">
+                <div class="buzzer-status" id="buzzer-status">
+                    Status Buzzer: NONAKTIF
+                </div>
+                <div class="question" id="current-question">
+                    Sebutkan makanan yang biasa dimakan saat sarapan?
+                </div>
+                <div class="answers-list" id="answers-list">
+                    <!-- Answers will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="team-score" id="team1-panel">
+                <div class="team-header">
+                    <span class="team-name">Tim 1</span>
+                    <span class="team-points" id="team1-points">0</span>
+                </div>
+                <div class="strike-count" id="team1-strikes">
+                    <!-- X marks will be added here -->
+                </div>
+            </div>
+
+            <div class="team-score" id="team2-panel">
+                <div class="team-header">
+                    <span class="team-name">Tim 2</span>
+                    <span class="team-points" id="team2-points">0</span>
+                </div>
+                <div class="strike-count" id="team2-strikes">
+                    <!-- X marks will be added here -->
+                </div>
+            </div>
+
+            <div class="round-info">
+                <h3>Ronde: <span id="round-number">1</span></h3>
+                <p>Nilai Ronde: <span id="round-points">0</span></p>
+            </div>
+
+            <div class="game-controls">
+                <button class="control-btn" id="toggle-buzzer">Aktifkan Buzzer</button>
+                <button class="control-btn wrong-btn" id="wrong-answer">SALAH ✕</button>
+                <button class="control-btn" id="next-question">Pertanyaan Berikutnya</button>
+                <button class="control-btn" id="reset-round">Reset Ronde</button>
+                <button class="control-btn" id="show-all">Tampilkan Semua Jawaban</button>
+                <button class="control-btn" id="switch-team">Ganti Tim</button>
+            </div>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <div class="buzz-notification" id="buzz-notification"></div>
+
+    <script>
+        let ws;
+        let currentRound = 1;
+        let gameState = {
+            currentQuestion: "",
+            answers: [],
+            team1: { points: 0, strikes: 0 },
+            team2: { points: 0, strikes: 0 },
+            roundPoints: 0,
+            buzzerEnabled: false
+        };
+
+        // Add file upload handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const questions = JSON.parse(e.target.result);
+                    // Validate questions format
+                    if (Array.isArray(questions) && questions.length > 0) {
+                        ws.send(JSON.stringify({
+                            type: 'uploadQuestions',
+                            questions: questions
+                        }));
+                        showStatus('Questions uploaded successfully!', 'success');
+                    } else {
+                        showStatus('Invalid questions format!', 'error');
+                    }
+                } catch (error) {
+                    showStatus('Error parsing questions file!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Connect to WebSocket server
+        function connectWebSocket() {
+            ws = new WebSocket('ws://' + window.location.hostname + ':3000');
+            
+            ws.onopen = () => {
+                showStatus('Terhubung ke server', 'success');
+                // Identify as game host
+                ws.send(JSON.stringify({
+                    type: 'identify',
+                    role: 'host'
+                }));
+            };
+
+            ws.onclose = () => {
+                showStatus('Koneksi terputus. Mencoba menghubungkan kembali...', 'error');
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (error) {
+                    console.error('Error parsing message:', error);
+                }
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'gameState':
+                    updateGameState(data.state);
+                    break;
+                case 'buzz':
+                    handleBuzz(data);
+                    break;
+                case 'playerBuzzed':
+                    handlePlayerBuzz(data);
+                    break;
+                case 'roundReset':
+                    handleRoundReset();
+                    break;
+                case 'forceReset':
+                    // Force reset with new state
+                    gameState = data.state;
+                    forceUpdateUI();
+                    break;
+            }
+        }
+
+        function handleBuzz(data) {
+            showBuzzNotification(data.playerName, data.team);
+            setActiveTeam(data.team);
+        }
+
+        function showBuzzNotification(playerName, team) {
+            const notification = document.getElementById('buzz-notification');
+            notification.textContent = `${playerName} (Tim ${team}) Menekan Buzzer!`;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function setActiveTeam(team) {
+            gameState.activeTeam = team;
+            document.getElementById('team1-panel').classList.toggle('active', team === '1');
+            document.getElementById('team2-panel').classList.toggle('active', team === '2');
+        }
+
+        function updateGameState(state) {
+            // Create a fresh copy of the state
+            gameState = JSON.parse(JSON.stringify(state));
+            updateUI();
+        }
+
+        function updateUI() {
+            if (!gameState) return;
+
+            // Update points
+            document.getElementById('team1-points').textContent = gameState.team1.points || 0;
+            document.getElementById('team2-points').textContent = gameState.team2.points || 0;
+
+            // Update strikes
+            updateStrikes('team1-strikes', gameState.team1.strikes || 0);
+            updateStrikes('team2-strikes', gameState.team2.strikes || 0);
+
+            // Update round info
+            document.getElementById('round-number').textContent = currentRound;
+            document.getElementById('round-points').textContent = gameState.roundPoints || 0;
+            
+            // Update question if available
+            if (gameState.currentQuestion) {
+                document.getElementById('current-question').textContent = gameState.currentQuestion;
+            }
+            
+            // Update buzzer status
+            updateBuzzerStatus(gameState.buzzerEnabled || false);
+            
+            // Update answers list
+            updateAnswersList();
+
+            // Update team panels active state
+            document.getElementById('team1-panel').classList.toggle('active', gameState.activeTeam === '1');
+            document.getElementById('team2-panel').classList.toggle('active', gameState.activeTeam === '2');
+        }
+
+        function updateBuzzerStatus(enabled) {
+            const buzzerStatus = document.getElementById('buzzer-status');
+            const toggleBtn = document.getElementById('toggle-buzzer');
+            
+            buzzerStatus.textContent = `Status Buzzer: ${enabled ? 'AKTIF' : 'NONAKTIF'}`;
+            buzzerStatus.className = `buzzer-status ${enabled ? 'active' : 'inactive'}`;
+            toggleBtn.textContent = enabled ? 'Nonaktifkan Buzzer' : 'Aktifkan Buzzer';
+        }
+
+        function updateStrikes(elementId, count) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const strike = document.createElement('span');
+                strike.className = 'strike';
+                strike.textContent = 'X';
+                container.appendChild(strike);
+            }
+        }
+
+        function updateAnswersList() {
+            const container = document.getElementById('answers-list');
+            container.innerHTML = '';
+
+            gameState.answers.forEach((answer, index) => {
+                const answerElement = document.createElement('div');
+                answerElement.className = 'answer-item';
+                const isRevealed = answer.revealed;
+                answerElement.innerHTML = `
+                    <div class="answer-number">${index + 1}</div>
+                    <div class="answer-text">${answer.text}</div>
+                    <div class="answer-points">${answer.points}</div>
+                    <div class="answer-controls">
+                        ${!isRevealed ? `
+                            <button class="answer-btn" onclick="markCorrect(${index})">BENAR ✓</button>
+                        ` : ''}
+                    </div>
+                `;
+                if (isRevealed) {
+                    answerElement.classList.add('revealed');
+                }
+                container.appendChild(answerElement);
+            });
+        }
+
+        function markCorrect(index) {
+            if (!gameState.activeTeam) {
+                showStatus('Pilih tim yang aktif terlebih dahulu', 'error');
+                return;
+            }
+
+            // Play correct sound
+            const correctSound = new Audio('sound/family-benar.mp3');
+            correctSound.play();
+
+            ws.send(JSON.stringify({
+                type: 'answer',
+                index: index,
+                correct: true,
+                team: gameState.activeTeam
+            }));
+        }
+
+        function switchToTeam(team) {
+            if (team === gameState.activeTeam) return; // Don't switch if it's the same team
+            
+            gameState.activeTeam = team;
+            // Update UI immediately
+            document.getElementById('team1-panel').classList.toggle('active', team === '1');
+            document.getElementById('team2-panel').classList.toggle('active', team === '2');
+            
+            // Send team switch to server
+            ws.send(JSON.stringify({
+                type: 'switchTeam',
+                team: team
+            }));
+            
+            // Show status message
+            showStatus(`Giliran Tim ${team}`, 'success');
+            updateUI();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function handleRoundReset() {
+            // Reset local game state
+            gameState = {
+                team1: { points: 0, strikes: 0 },
+                team2: { points: 0, strikes: 0 },
+                currentQuestion: null,
+                answers: [],
+                buzzerEnabled: false,
+                activeTeam: null,
+                roundPoints: 0
+            };
+
+            forceUpdateUI();
+            showStatus('Ronde telah direset!', 'success');
+        }
+
+        function forceUpdateUI() {
+            // Force reset all UI elements
+            document.getElementById('team1-points').textContent = '0';
+            document.getElementById('team2-points').textContent = '0';
+            document.getElementById('round-points').textContent = '0';
+            document.getElementById('team1-panel').classList.remove('active');
+            document.getElementById('team2-panel').classList.remove('active');
+            updateStrikes('team1-strikes', 0);
+            updateStrikes('team2-strikes', 0);
+            updateBuzzerStatus(false);
+            document.getElementById('answers-list').innerHTML = '';
+
+            // Then update with current state
+            updateUI();
+        }
+
+        // Event Listeners
+        document.getElementById('toggle-buzzer').addEventListener('click', () => {
+            const newState = !gameState.buzzerEnabled;
+            ws.send(JSON.stringify({
+                type: 'toggleBuzzer',
+                enabled: newState
+            }));
+            gameState.buzzerEnabled = newState;
+            updateBuzzerStatus(newState);
+        });
+
+        document.getElementById('next-question').addEventListener('click', () => {
+            if (confirm('Apakah anda yakin ingin pindah ke pertanyaan berikutnya?')) {
+                ws.send(JSON.stringify({ type: 'nextQuestion' }));
+            }
+        });
+
+        document.getElementById('reset-round').addEventListener('click', () => {
+            if (confirm('Apakah anda yakin ingin mereset ronde ini? Semua nilai akan dihapus.')) {
+                // Send reset command to server first
+                ws.send(JSON.stringify({ 
+                    type: 'resetRound',
+                    resetAll: true
+                }));
+                // Then handle local reset
+                handleRoundReset();
+            }
+        });
+
+        document.getElementById('show-all').addEventListener('click', () => {
+            if (confirm('Apakah anda yakin ingin menampilkan semua jawaban?')) {
+                ws.send(JSON.stringify({ type: 'showAllAnswers' }));
+            }
+        });
+
+        // Add event listener for team switch button
+        document.getElementById('switch-team').addEventListener('click', () => {
+            const newTeam = gameState.activeTeam === '1' ? '2' : '1';
+            switchToTeam(newTeam);
+        });
+
+        // Add wrong answer handler
+        document.getElementById('wrong-answer').addEventListener('click', () => {
+            if (!gameState.activeTeam) {
+                showStatus('Pilih tim yang aktif terlebih dahulu', 'error');
+                return;
+            }
+
+            // Play wrong sound
+            const wrongSound = new Audio('sound/family-salah.mp3');
+            wrongSound.play();
+
+            // Create X popup
+            const xPopup = document.createElement('div');
+            xPopup.className = 'x-popup';
+            xPopup.textContent = '✕';
+            document.body.appendChild(xPopup);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                xPopup.remove();
+            }, 3000);
+
+            // Add strike to active team
+            if (gameState.activeTeam === '1') {
+                gameState.team1.strikes++;
+                updateStrikes('team1-strikes', gameState.team1.strikes);
+                if (gameState.team1.strikes >= 3) {
+                    switchToTeam('2');
+                }
+            } else {
+                gameState.team2.strikes++;
+                updateStrikes('team2-strikes', gameState.team2.strikes);
+                if (gameState.team2.strikes >= 3) {
+                    switchToTeam('1');
+                }
+            }
+
+            // Send update to server
+            ws.send(JSON.stringify({
+                type: 'answer',
+                index: -1,
+                correct: false,
+                team: gameState.activeTeam
+            }));
+
+            updateUI();
+        });
+
+        // Initialize connection
+        connectWebSocket();
+    </script>
+</body>
+</html> 

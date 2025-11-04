@@ -1,0 +1,20 @@
+[
+    {
+        "question": "Sebutkan macam macam najis",
+        "answers": [
+            { "text": "Najis Mukhofafah", "points": 30 },
+            { "text": "Najis Mutawasitho", "points": 25 },
+            { "text": "Najis Mughaladah", "points": 20 }
+        ]
+    },
+    {
+        "question": "Apa saja rukun sholat",
+        "answers": [
+            { "text": "Niat", "points": 10 },
+            { "text": "Takbiratul Ihram", "points": 10 },
+            { "text": "Membaca Al-Fatihah", "points": 10 },
+            { "text": "Rukuk", "points": 10 },
+            { "text": "I'tidal", "points": 10 }
+        ]
+    }
+]

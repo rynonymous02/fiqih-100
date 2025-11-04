@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family 100 - Player</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #003366;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .player-form {
+            background-color: #004488;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0055aa;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0066cc;
+        }
+
+        .team-selector {
+            margin: 20px 0;
+        }
+
+        .team-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .position-btn {
+            padding: 10px 20px;
+            background: #004488;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .position-btn:hover {
+            background: #005599;
+        }
+
+        .team-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .team-btn.selected {
+            background: white;
+            color: #003366;
+        }
+
+        .buzzer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        .buzzer {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background-color: #cc0000;
+            border: none;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px auto;
+            display: none;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .buzzer.team1 {
+            background-color: #cc0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .buzzer.team2 {
+            background-color: #0066cc;
+            box-shadow: 0 0 20px rgba(0, 102, 204, 0.5);
+        }
+
+        .buzzer:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        .buzzer.disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #004488;
+            display: none;
+        }
+
+        #status.error {
+            background-color: #cc0000;
+        }
+
+        #status.success {
+            background-color: #008800;
+        }
+
+        .logout-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .logout-btn {
+            padding: 12px 24px;
+            background-color: #aa0000;
+            border: none;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .logout-btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="image/fiqih-icon.png" alt="Family 100">
+            <h1>PLAYER BUZZER</h1>
+        </div>
+
+        <div id="player-form" class="player-form">
+            <h2>Masuk ke Game</h2>
+            <div>
+                <input type="text" id="player-name" placeholder="Nama Player" required>
+            </div>
+            <div class="team-selector">
+                <h3>Pilih Tim:</h3>
+                <button class="team-btn selected" data-team="1">Tim 1</button>
+                <button class="team-btn" data-team="2">Tim 2</button>
+            </div>
+            <button id="join-btn">Masuk</button>
+        </div>
+
+        <div class="buzzer-container">
+            <button id="buzzer" class="buzzer team1">BUZZ!</button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <div class="logout-container">
+        <button id="logout-btn" class="logout-btn">Logout</button>
+    </div>
+
+    <script>
+        let ws;
+        let currentTeam = "1";
+        let playerName = "";
+        let isConnected = false;
+        let isManualLogout = false;
+
+        const playerForm = document.getElementById('player-form');
+        const buzzerBtn = document.getElementById('buzzer');
+        const statusDiv = document.getElementById('status');
+        const joinBtn = document.getElementById('join-btn');
+        const playerNameInput = document.getElementById('player-name');
+        const teamButtons = document.querySelectorAll('.team-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Load saved player data
+        const savedPlayer = localStorage.getItem('playerData');
+        if (savedPlayer) {
+            const data = JSON.parse(savedPlayer);
+            playerName = data.name;
+            currentTeam = data.team;
+            playerNameInput.value = playerName;
+            teamButtons.forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.team === currentTeam);
+            });
+            // Auto connect if we have saved data
+            connectToGame(true);
+        }
+
+        // Team selection
+        teamButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                teamButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                currentTeam = btn.dataset.team;
+                buzzerBtn.className = `buzzer team${currentTeam}${buzzerBtn.disabled ? ' disabled' : ''}`;
+            });
+        });
+
+        joinBtn.addEventListener('click', () => connectToGame(false));
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                connectToGame(false);
+            }
+        });
+        logoutBtn.addEventListener('click', handleLogout);
+
+        function connectToGame(isReconnect) {
+            if (!isReconnect) {
+                playerName = playerNameInput.value.trim();
+                if (!playerName) {
+                    alert('Masukkan nama player!');
+                    return;
+                }
+                // Save player data
+                localStorage.setItem('playerData', JSON.stringify({
+                    name: playerName,
+                    team: currentTeam
+                }));
+            }
+
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = 'Menghubungkan ke server...';
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.hostname}:${window.location.port || '3000'}`;
+            
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    console.log('Connected to server');
+                    isConnected = true;
+                    
+                    ws.send(JSON.stringify({
+                        type: 'register',
+                        role: 'player',
+                        playerName: playerName,
+                        team: currentTeam
+                    }));
+
+                    playerForm.style.display = 'none';
+                    buzzerBtn.style.display = 'block';
+                    statusDiv.textContent = `Terhubung ke game! (Tim ${currentTeam})`;
+                    logoutBtn.style.display = 'block';
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    
+                    switch(data.type) {
+                        case 'buzzerState':
+                            if (data.enabled) {
+                                resetBuzzer();
+                            } else {
+                                disableBuzzer();
+                            }
+                            break;
+                            
+                        case 'buzzLocked':
+                            handleBuzzLock(data.playerName, data.team);
+                            break;
+                            
+                        case 'roundReset':
+                            resetBuzzer();
+                            break;
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log('Disconnected from server');
+                    isConnected = false;
+                    disableBuzzer();
+                    logoutBtn.style.display = 'none';
+                    if (isManualLogout) {
+                        isManualLogout = false;
+                        statusDiv.textContent = 'Anda telah keluar. Silakan masuk lagi.';
+                        playerForm.style.display = 'block';
+                        buzzerBtn.style.display = 'none';
+                    } else {
+                        statusDiv.textContent = 'Terputus dari server. Refresh halaman untuk menghubungkan kembali.';
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    statusDiv.textContent = 'Gagal terhubung ke server! Refresh halaman untuk mencoba lagi.';
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+                statusDiv.textContent = 'Gagal membuat koneksi! Refresh halaman untuk mencoba lagi.';
+            }
+        }
+
+        function resetBuzzer() {
+            buzzerBtn.disabled = false;
+            buzzerBtn.classList.remove('disabled', 'pressed');
+            buzzerBtn.style.transform = 'scale(1)';
+            statusDiv.textContent = 'SIAP!';
+            statusDiv.style.color = '#00ff00';
+        }
+
+        function disableBuzzer() {
+            buzzerBtn.disabled = true;
+            buzzerBtn.classList.add('disabled');
+            statusDiv.textContent = 'TUNGGU...';
+            statusDiv.style.color = '#ff0000';
+        }
+
+        function handleBuzzLock(buzzedPlayerName, team) {
+            buzzerBtn.disabled = true;
+            buzzerBtn.classList.add('disabled');
+            
+            if (buzzedPlayerName === playerName) {
+                statusDiv.textContent = 'KAMU MENEKAN BUZZER!';
+                statusDiv.style.color = '#ffff00';
+            } else {
+                statusDiv.textContent = `${buzzedPlayerName} (Tim ${team}) Menekan Buzzer!`;
+                statusDiv.style.color = '#ff0000';
+            }
+        }
+
+        // Handle buzzer click
+        buzzerBtn.addEventListener('click', function() {
+            if (!this.disabled && isConnected) {
+                this.classList.add('pressed');
+                this.disabled = true;
+                
+                ws.send(JSON.stringify({
+                    type: 'buzz',
+                    playerName: playerName,
+                    team: currentTeam
+                }));
+                
+                statusDiv.textContent = 'BUZZ!';
+                statusDiv.style.color = '#ffff00';
+            }
+        });
+
+        function handleLogout() {
+            // Mark manual logout to alter onclose behavior
+            isManualLogout = true;
+
+            // Clear saved player data
+            localStorage.removeItem('playerData');
+
+            // Reset UI immediately
+            playerForm.style.display = 'block';
+            buzzerBtn.style.display = 'none';
+            disableBuzzer();
+            logoutBtn.style.display = 'none';
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = 'Keluar dari game...';
+            statusDiv.style.color = '#ffffff';
+
+            // Reset inputs and selection
+            playerNameInput.value = '';
+            currentTeam = '1';
+            teamButtons.forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.team === currentTeam);
+            });
+            buzzerBtn.className = `buzzer team${currentTeam}`;
+
+            // Close websocket if open
+            try {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                } else {
+                    isConnected = false;
+                }
+            } catch (_) {
+                isConnected = false;
+            }
+        }
+    </script>
+</body>
+</html> 

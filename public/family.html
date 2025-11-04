@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family 100 Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #003366;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header img {
+      max-width: 400px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      display: none;
+    }
+
+    .question {
+      font-size: 1.5rem;
+      text-align: center;
+      background-color: #004488;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .answers-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .answer-row {
+      display: flex;
+      height: 60px;
+      position: relative;
+    }
+
+    .answer-number {
+      width: 60px;
+      height: 60px;
+      background-color: #002244;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 10px 0 0 10px;
+    }
+
+    .answer-content {
+      flex-grow: 1;
+      height: 100%;
+      background-color: #0055aa;
+      position: relative;
+      border-radius: 0 10px 10px 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .answer-text {
+      font-size: 1.3rem;
+      font-weight: bold;
+      display: none;
+    }
+
+    .answer-points {
+      font-size: 1.3rem;
+      background-color: #002244;
+      padding: 5px 15px;
+      border-radius: 20px;
+      margin-left: 10px;
+      display: none;
+    }
+
+    .answer-cover {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0055aa;
+      cursor: pointer;
+    }
+
+    .team-x-marks {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+      height: 20px;
+    }
+
+    .team-x-mark {
+      color: red;
+      font-weight: bold;
+      font-size: 1.5rem;
+      display: none;
+    }
+
+    .x-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 10rem;
+      color: red;
+      font-weight: bold;
+      z-index: 100;
+      animation: popup 0.5s forwards, fadeout 0.5s 2.5s forwards;
+      text-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+    }
+
+    @keyframes popup {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes fadeout {
+      to { opacity: 0; }
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 20px;
+    }
+
+    .team-controls {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: order 0.3s ease;
+    }
+
+    #team-a-controls {
+      order: 1;
+    }
+
+    #team-b-controls {
+      order: 2;
+    }
+
+    #team-a-controls.right {
+      order: 2;
+    }
+
+    #team-b-controls.left {
+      order: 1;
+    }
+
+    .team-score {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #002244;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+    }
+
+    .team-name {
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    .score {
+      font-size: 2rem;
+      font-weight: bold;
+      color: gold;
+    }
+
+    .team-selector {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .team-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .team-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #002244;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #cc0000;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .team-indicator {
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .buzzer-notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 2rem;
+      z-index: 1000;
+      text-align: center;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .buzzer-notification .player-name {
+      color: #ffff00;
+      font-size: 2.5rem;
+      margin: 10px 0;
+    }
+
+    .buzzer-notification .team-name {
+      color: #00ff00;
+      font-size: 1.8rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    .game-controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .control-btn {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #0055aa;
+      color: white;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .control-btn:hover {
+      background-color: #0066cc;
+    }
+
+    .wrong-btn {
+      background-color: #cc0000;
+    }
+
+    .wrong-btn:hover {
+      background-color: #ff0000;
+    }
+
+    .reset-btn {
+      background-color: #555;
+    }
+
+    .reset-btn:hover {
+      background-color: #777;
+    }
+
+    .question-selector {
+      margin-top: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .question-select {
+      padding: 8px 15px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      background-color: #0055aa;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div id="connection-form" style="text-align: center; margin: 20px 0; padding: 20px; background-color: #004488; border-radius: 10px;">
+      <h2>Connect to Game Server</h2>
+      <div style="margin: 10px 0;">
+        <input type="text" id="server-address" placeholder="Server IP (contoh: 192.168.1.5)" style="padding: 8px; margin: 5px; border: none; border-radius: 5px; width: 200px;" />
+        <input type="text" id="server-port" value="3000" placeholder="Port (default: 3000)" style="padding: 8px; margin: 5px; border: none; border-radius: 5px; width: 200px;" />
+      </div>
+      <button id="connect-btn" style="padding: 8px 16px; background-color: #0055aa; color: white; border: none; border-radius: 5px; cursor: pointer;">Connect</button>
+      <div id="connection-status" style="margin-top: 10px; color: yellow;"></div>
+    </div>
+
+    <div id="game-content" style="display: none;">
+      <div class="header">
+        <img src="image/fiqih-icon.png" alt="Family 100">
+        <h1>FAMILY 100</h1>
+      </div>
+
+      <div class="question-selector">
+        <select class="question-select" id="question-select">
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+
+      <div class="question" id="question">
+        Sebutkan hal yang sering dibawa saat pergi ke pantai?
+      </div>
+
+      <div class="answers-container" id="answers-container">
+        <!-- Jawaban akan digenerate via JavaScript -->
+      </div>
+
+      <div class="team-selector">
+        <div>Tim A</div>
+        <label class="team-switch">
+          <input type="checkbox" id="team-toggle">
+          <span class="slider"></span>
+        </label>
+        <div>Tim B</div>
+      </div>
+
+      <div class="team-indicator" id="team-indicator">
+        Sekarang giliran: Tim A
+      </div>
+
+      <div class="controls">
+        <div class="team-controls" id="team-a-controls">
+          <div class="team-score">
+            <div class="team-name">Tim A</div>
+            <div class="score" id="score-a">0</div>
+          </div>
+          <div class="team-x-marks" id="team-a-x">
+            <div class="team-x-mark">✕</div>
+            <div class="team-x-mark">✕</div>
+            <div class="team-x-mark">✕</div>
+          </div>
+        </div>
+        <div class="team-controls" id="team-b-controls">
+          <div class="team-score">
+            <div class="team-name">Tim B</div>
+            <div class="score" id="score-b">0</div>
+          </div>
+          <div class="team-x-marks" id="team-b-x">
+            <div class="team-x-mark">✕</div>
+            <div class="team-x-mark">✕</div>
+            <div class="team-x-mark">✕</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-controls">
+        <button class="control-btn wrong-btn" id="wrong-btn">SALAH (X)</button>
+        <button class="control-btn reset-btn" id="reset-btn">RESET GAME</button>
+        <button class="control-btn" id="reset-buzz-btn">RESET BUZZ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="players-container" style="margin-top: 20px; text-align: center;">
+    <h3>Connected Players</h3>
+    <div id="players-list" style="margin: 10px 0;"></div>
+  </div>
+
+  <audio id="correct-sound" src="sound/family-benar.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="sound/family-salah.mp3" preload="auto"></audio>
+  <audio id="buzz-sound" src="sound/family-buzzer.mp3" preload="auto"></audio>
+  <audio id="start-sound" src="sound/family-start.mp3" preload="auto"></audio>
+  <audio id="login-sound" src="sound/family-start.mp3" preload="auto"></audio>
+
+  <script>
+    // Variabel game
+    let currentTeam = 'A'; // A atau B
+    let scoreA = 0;
+    let scoreB = 0;
+    let wrongCountA = 0;
+    let wrongCountB = 0;
+    const maxWrong = 3;
+    let currentQuestionIndex = 0;
+
+    // Audio
+    const correctSound = document.getElementById('correct-sound');
+    const wrongSound = document.getElementById('wrong-sound');
+
+    // Setup elements
+    const questionEl = document.getElementById('question');
+    const answersContainerEl = document.getElementById('answers-container');
+    const teamToggleEl = document.getElementById('team-toggle');
+    const teamIndicatorEl = document.getElementById('team-indicator');
+    const scoreAEl = document.getElementById('score-a');
+    const scoreBEl = document.getElementById('score-b');
+    const teamAXEl = document.getElementById('team-a-x');
+    const teamBXEl = document.getElementById('team-b-x');
+    const wrongBtnEl = document.getElementById('wrong-btn');
+    const resetBtnEl = document.getElementById('reset-btn');
+    const questionSelectEl = document.getElementById('question-select');
+
+    // WebSocket connection
+    let ws;
+    let gameState = {
+        currentQuestion: "",
+        answers: [],
+        team1: { points: 0, strikes: 0 },
+        team2: { points: 0, strikes: 0 },
+        roundPoints: 0
+    };
+    
+    document.getElementById('connect-btn').addEventListener('click', () => {
+        const serverAddress = document.getElementById('server-address').value.trim();
+        const serverPort = document.getElementById('server-port').value.trim() || '3000';
+        
+        if (!serverAddress) {
+            alert('Masukkan alamat IP server');
+            return;
+        }
+        
+        connectWebSocket(serverAddress, serverPort);
+    });
+    
+    function connectWebSocket(serverAddress, serverPort) {
+        const wsUrl = `ws://${serverAddress}:${serverPort}`;
+        
+        try {
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('Connected to server');
+                ws.send(JSON.stringify({
+                    type: 'register',
+                    role: 'display'
+                }));
+                
+                // Hide connection form and show game
+                document.getElementById('connection-form').style.display = 'none';
+                document.getElementById('game-content').style.display = 'block';
+                
+                // Play login success sound
+                document.getElementById('login-sound').play();
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    switch(data.type) {
+                        case 'gameState':
+                            updateGameState(data.state);
+                            break;
+                            
+                        case 'playerJoined':
+                        case 'playerLeft':
+                            updatePlayersList(data.players);
+                            break;
+                            
+                        case 'playerBuzzed':
+                            handlePlayerBuzz(data.playerName, data.team);
+                            break;
+
+                        case 'playSound':
+                            playSound(data.sound);
+                            break;
+                            
+                        case 'wrong':
+                            wrongSound.play();
+                            createXPopup();
+                            
+                            // Update X marks for the active team
+                            if (data.team === '1') {
+                                wrongCountA++;
+                                updateXmarks(teamAXEl, wrongCountA);
+                            } else {
+                                wrongCountB++;
+                                updateXmarks(teamBXEl, wrongCountB);
+                            }
+                            
+                            // Switch team if max strikes reached
+                            if ((data.team === '1' && wrongCountA >= maxWrong) || 
+                                (data.team === '2' && wrongCountB >= maxWrong)) {
+                                switchTeam();
+                            }
+                            break;
+
+                        case 'answer':
+                            if (data.correct) {
+                                correctSound.play();
+                            }
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                document.getElementById('connection-form').style.display = 'block';
+                document.getElementById('game-content').style.display = 'none';
+                document.getElementById('players-list').innerHTML = '';
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                alert('Gagal terhubung ke server. Pastikan alamat IP dan port benar.');
+            };
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Gagal membuat koneksi. Periksa alamat IP dan port.');
+        }
+    }
+
+    function updateGameState(state) {
+        gameState = state;
+        
+        // Update question
+        questionEl.textContent = state.currentQuestion;
+        
+        // Update answers
+        updateAnswers(state.answers);
+        
+        // Update team scores
+        scoreAEl.textContent = state.team1.points;
+        scoreBEl.textContent = state.team2.points;
+        
+        // Update strikes
+        updateXmarks(teamAXEl, state.team1.strikes);
+        updateXmarks(teamBXEl, state.team2.strikes);
+
+        // Update team indicator
+        if (state.activeTeam) {
+            currentTeam = state.activeTeam === '1' ? 'A' : 'B';
+            teamToggleEl.checked = currentTeam === 'B';
+            updateTeamIndicator();
+        }
+    }
+
+    function updateAnswers(answers) {
+        answersContainerEl.innerHTML = '';
+        
+        answers.forEach((answer, index) => {
+            const answerRow = document.createElement('div');
+            answerRow.className = 'answer-row';
+            
+            const answerNumber = document.createElement('div');
+            answerNumber.className = 'answer-number';
+            answerNumber.textContent = index + 1;
+            
+            const answerContent = document.createElement('div');
+            answerContent.className = 'answer-content';
+            
+            const answerText = document.createElement('div');
+            answerText.className = 'answer-text';
+            answerText.textContent = answer.text;
+            if (answer.revealed) {
+                answerText.style.display = 'block';
+            }
+            
+            const answerPoints = document.createElement('div');
+            answerPoints.className = 'answer-points';
+            answerPoints.textContent = answer.points;
+            if (answer.revealed) {
+                answerPoints.style.display = 'block';
+            }
+            
+            const answerCover = document.createElement('div');
+            answerCover.className = 'answer-cover';
+            if (answer.revealed) {
+                answerCover.style.display = 'none';
+            }
+            
+            answerContent.appendChild(answerText);
+            answerContent.appendChild(answerPoints);
+            answerContent.appendChild(answerCover);
+            
+            answerRow.appendChild(answerNumber);
+            answerRow.appendChild(answerContent);
+            
+            answersContainerEl.appendChild(answerRow);
+        });
+    }
+    
+    function updatePlayersList(players) {
+      const playersListEl = document.getElementById('players-list');
+      playersListEl.innerHTML = players.map(player => 
+        `<div style="margin: 5px; padding: 10px; background: #004488; border-radius: 5px;">
+           ${player.name}
+         </div>`
+      ).join('');
+    }
+    
+    function handlePlayerBuzz(playerName, team) {
+        // Play buzz sound
+        playSound('buzz');
+        
+        // Create and show notification
+        const notification = document.createElement('div');
+        notification.className = 'buzzer-notification';
+        notification.innerHTML = `
+            BUZZ!<br>
+            <span class="player-name">${playerName}</span><br>
+            <span class="team-name">Tim ${team === "1" ? "A" : "B"}</span>
+        `;
+        document.body.appendChild(notification);
+
+        // Remove notification after 2 seconds
+        setTimeout(() => {
+            notification.style.animation = 'fadeIn 0.3s ease-in reverse';
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
+    }
+
+    // Populate question selector
+    function populateQuestionSelector() {
+      // Question selector is no longer needed in family.html as it's controlled by the host
+      questionSelectEl.style.display = 'none';
+    }
+
+    // Load question
+    function loadQuestion(index) {
+      currentQuestionIndex = index;
+      // Questions are now managed by the server through gameState
+      if (gameState.currentQuestion) {
+        questionEl.textContent = gameState.currentQuestion;
+        createAnswers(gameState.answers);
+        resetWrongCount();
+      }
+    }
+
+    // Buat jawaban
+    function createAnswers(answers) {
+      answersContainerEl.innerHTML = '';
+      
+      answers.forEach((answer, index) => {
+        const answerRow = document.createElement('div');
+        answerRow.className = 'answer-row';
+        
+        const answerNumber = document.createElement('div');
+        answerNumber.className = 'answer-number';
+        answerNumber.textContent = index + 1;
+        
+        const answerContent = document.createElement('div');
+        answerContent.className = 'answer-content';
+        
+        const answerText = document.createElement('div');
+        answerText.className = 'answer-text';
+        answerText.textContent = answer.text;
+        if (answer.revealed) {
+          answerText.style.display = 'block';
+        }
+        
+        const answerPoints = document.createElement('div');
+        answerPoints.className = 'answer-points';
+        answerPoints.textContent = answer.points;
+        if (answer.revealed) {
+          answerPoints.style.display = 'block';
+        }
+        
+        const answerCover = document.createElement('div');
+        answerCover.className = 'answer-cover';
+        if (answer.revealed) {
+          answerCover.style.display = 'none';
+        }
+        
+        answerContent.appendChild(answerText);
+        answerContent.appendChild(answerPoints);
+        answerContent.appendChild(answerCover);
+        
+        answerRow.appendChild(answerNumber);
+        answerRow.appendChild(answerContent);
+        
+        answersContainerEl.appendChild(answerRow);
+      });
+    }
+
+    // Tampilkan jawaban
+    function revealAnswer(index) {
+      const answerRow = answersContainerEl.children[index];
+      const answerContent = answerRow.querySelector('.answer-content');
+      const answerText = answerContent.querySelector('.answer-text');
+      const answerPoints = answerContent.querySelector('.answer-points');
+      const answerCover = answerContent.querySelector('.answer-cover');
+      
+      // Tampilkan jawaban dan point
+      answerText.style.display = 'block';
+      answerPoints.style.display = 'block';
+      answerCover.style.display = 'none';
+      
+      // Mainkan suara benar
+      correctSound.play();
+      
+      // Points are now managed by the server through gameState
+      if (gameState.answers[index] && gameState.answers[index].points) {
+        const points = gameState.answers[index].points;
+        if (currentTeam === 'A') {
+          scoreA += points;
+          scoreAEl.textContent = scoreA;
+        } else {
+          scoreB += points;
+          scoreBEl.textContent = scoreB;
+        }
+      }
+    }
+
+    // Create X popup
+    function createXPopup() {
+      const xPopup = document.createElement('div');
+      xPopup.className = 'x-popup';
+      xPopup.textContent = '✕';
+      document.body.appendChild(xPopup);
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        xPopup.remove();
+      }, 3000);
+    }
+
+    // Menampilkan tanda silang (X) saat jawaban salah
+    function showWrong() {
+      wrongSound.play();
+      createXPopup();
+      
+      // Update wrong count for current team
+      if (currentTeam === 'A') {
+        wrongCountA++;
+        updateXmarks(teamAXEl, wrongCountA);
+      } else {
+        wrongCountB++;
+        updateXmarks(teamBXEl, wrongCountB);
+      }
+      
+      // Ganti tim jika sudah 3 kali salah
+      if ((currentTeam === 'A' && wrongCountA >= maxWrong) || 
+          (currentTeam === 'B' && wrongCountB >= maxWrong)) {
+        switchTeam();
+      }
+    }
+
+    // Update X marks display
+    function updateXmarks(container, count) {
+      const marks = container.querySelectorAll('.team-x-mark');
+      marks.forEach((mark, index) => {
+        mark.style.display = index < count ? 'block' : 'none';
+      });
+    }
+
+    // Ganti tim
+    function switchTeam() {
+      currentTeam = currentTeam === 'A' ? 'B' : 'A';
+      teamToggleEl.checked = currentTeam === 'B';
+      updateTeamIndicator();
+    }
+
+    // Update indikator tim yang sekarang
+    function updateTeamIndicator() {
+      teamIndicatorEl.textContent = `Sekarang giliran: Tim ${currentTeam}`;
+    }
+
+    // Reset counter tanda silang
+    function resetWrongCount() {
+      wrongCountA = 0;
+      wrongCountB = 0;
+      updateXmarks(teamAXEl, 0);
+      updateXmarks(teamBXEl, 0);
+    }
+
+    // Reset game
+    function resetGame() {
+      // Play start game sound
+      document.getElementById('start-sound').play();
+      
+      // Reset skor
+      scoreA = 0;
+      scoreB = 0;
+      scoreAEl.textContent = '0';
+      scoreBEl.textContent = '0';
+      
+      // Reset tim
+      currentTeam = 'A';
+      teamToggleEl.checked = false;
+      updateTeamIndicator();
+      
+      // Reset tanda silang
+      resetWrongCount();
+      
+      // Load current question again
+      loadQuestion(currentQuestionIndex);
+      
+      // Reset buzzer for players
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'resetBuzz'
+        }));
+      }
+    }
+
+    // Event listener untuk tombol salah
+    wrongBtnEl.addEventListener('click', showWrong);
+
+    // Event listener untuk tombol reset
+    resetBtnEl.addEventListener('click', resetGame);
+
+    // Event listener untuk toggle tim
+    teamToggleEl.addEventListener('change', function() {
+      currentTeam = this.checked ? 'B' : 'A';
+      updateTeamIndicator();
+    });
+
+    // Event listener untuk question selector
+    questionSelectEl.addEventListener('change', function() {
+      loadQuestion(parseInt(this.value));
+    });
+
+    // Add event listener for reset buzz button
+    document.getElementById('reset-buzz-btn').addEventListener('click', function() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'resetBuzz'
+        }));
+      }
+    });
+
+    // Inisialisasi game
+    populateQuestionSelector();
+    loadQuestion(0);
+    updateTeamIndicator();
+
+    function playSound(soundType) {
+        const sounds = {
+            'correct': document.getElementById('correct-sound'),
+            'wrong': document.getElementById('wrong-sound'),
+            'buzz': document.getElementById('buzz-sound'),
+            'start': document.getElementById('start-sound'),
+            'login': document.getElementById('login-sound')
+        };
+
+        const sound = sounds[soundType];
+        if (sound) {
+            // Reset the sound to the beginning if it's already playing
+            sound.pause();
+            sound.currentTime = 0;
+            // Play the sound
+            sound.play().catch(error => {
+                console.error('Error playing sound:', error);
+            });
+        }
+    }
+  </script>
+</body>
+
+</html>
