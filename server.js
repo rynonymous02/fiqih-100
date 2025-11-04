@@ -1,6 +1,6 @@
+const WebSocket = require('ws');
+const http = require('http');
 const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
 const path = require('path');
 
 // Create Express app
@@ -25,13 +25,10 @@ app.get('/player', (req, res) => {
 });
 
 // Create HTTP server
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: process.env.VERCEL_URL || "http://localhost:3000",
-        methods: ["GET", "POST"]
-    }
-});
+const server = http.createServer(app);
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
 
 // Game state with fiqh/thaharah questions
 let gameState = {
@@ -40,6 +37,8 @@ let gameState = {
         { text: "Najis Mukhofafah", points: 30 },
         { text: "Najis Mutawasitho", points: 25 },
         { text: "Najis Mughaladah", points: 20 },
+        { text: "Najis Ainiyah", points: 15 },
+        { text: "Najis Hukmiyah", points: 10 }
     ],
     team1: { points: 0, strikes: 0 },
     team2: { points: 0, strikes: 0 },
@@ -52,81 +51,34 @@ let gameState = {
 // Database pertanyaan fiqh/thaharah
 const questionsDatabase = [
     {
-        question: "Apa saja rukun sholat",
+        question: "Apa saja alat untuk membersihkan najis",
         answers: [
-            { text: "Niat", points: 10 },
-            { text: "Takbiratul Ihram", points: 10 },
-            { text: "Membaca Al-Fatihah", points: 10 },
-            { text: "Rukuk", points: 10 },
-            { text: "I'tidal", points: 10 },
-            { text: "Dua Sujud", points: 10 },
-            { text: "Duduk Diantara Dua Sujud", points: 10 },
-            { text: "Membaca Tasyahud", points: 10 },
+            { text: "Air", points: 30 },
+            { text: "Tanah", points: 25 },
+            { text: "Kaki Hingga Mata Kaki", points: 20 },
+            { text: "Sebagian Rambut", points: 15 }
         ]
     },
     {
         question: "Apa saja najis mutawasitho?",
         answers: [
-            { text: "Kotoran", points: 10 },
-            { text: "Air Kencing", points: 10 },
-            { text: "Darah", points: 10 },
-            { text: "Bangkai", points: 10 },
+            { text: "Kotoran", points: 30 },
+            { text: "Air Kencing", points: 25 },
+            { text: "Darah", points: 20 },
+            { text: "Bangkai", points: 15 },
         ]
     },
     {
-        question: "Apa saja penyebab batal wudhu",
+        question: "Apa saja penyebab hadast kecil",
         answers: [
-            { text: "Buang air kecil/besar", points: 10 },
-            { text: "Kentut", points: 10 },
-            { text: "Tidur", points: 10 },
-            { text: "Mabuk/Pink Sun", points: 10 },
+            { text: "Buang air kecil/besar", points: 30 },
+            { text: "Kentut", points: 25 },
+            { text: "Tidur", points: 20 },
+            { text: "Mabuk/Pink Sun", points: 15 },
             { text: "Menyentuh #$@$@%", points: 10 },
-            { text: "Tidur dengan posisi berbaring", points: 10 },
-            { text: "Bersentuhnya antara dua kulit lawan jenis", points: 10 },
+            { text: "Tidur dengan posisi berbaring", points: 5 }
         ]
-    },
-    {
-        question: "Apa saja rukun wudhu?",
-        answers: [
-            { text: "Niat", points: 10 },
-            { text: "Membasuh Muka", points: 10 },
-            { text: "Membasuh kedua tangan", points: 10 },
-            { text: "Mengusap sebagian rambut", points: 10 },
-            { text: "Membasuh kedua kaki", points: 10 },
-        ]
-    },
-    {
-        question: "Apa saja huruf-huruf idgham bighunnah?",
-        answers: [
-            { text: "Ya'", points: 10 },
-            { text: "Wau", points: 10 },
-            { text: "Mim", points: 10 },
-            { text: "Nun", points: 10 },
-        ]
-    },
-    {
-        question: "Apa saja jenis-jenis idgham?",
-        answers: [
-            { text: "Idgham Bighunnah", points: 10 },
-            { text: "Idgham Bilaghunnah", points: 10 },
-            { text: "Idgham Mimi", points: 10 },
-            { text: "Idgham Mutamatsilain", points: 10 },
-            { text: "Idgham Mutaqarribain", points: 10 },
-            { text: "Idgham Mutajanissain", points: 10 },
-        ]
-    },
-    {
-        question: "Apa saja rukun islam?",
-        answers: [
-            { text: "Syahadat", points: 10 },
-            { text: "Sholat", points: 10 },
-            { text: "Zakat", points: 10 },
-            { text: "Puasa Ramadhan", points: 10 },
-            { text: "Haji Bagi Mampu", points: 10 },
-        ]
-    },
-    
-    
+    }
 ];
 
 let currentQuestionIndex = 0;
@@ -172,22 +124,6 @@ wss.on('connection', (ws) => {
                         ws.team = data.team;
                         broadcastPlayers();
                         console.log(`Player ${data.playerName} registered for Team ${data.team}`);
-                    }
-                    break;
-
-                case 'uploadQuestions':
-                    if (ws === gameHost) {
-                        // Validate questions format
-                        if (Array.isArray(data.questions) && data.questions.length > 0) {
-                            questionsDatabase = data.questions;
-                            currentQuestionIndex = 0;
-                            resetRound(true);
-                            ws.send(JSON.stringify({
-                                type: 'status',
-                                message: 'Questions database updated successfully!',
-                                status: 'success'
-                            }));
-                        }
                     }
                     break;
 
