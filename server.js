@@ -1,8 +1,7 @@
-const WebSocket = require('ws');
-const http = require('http');
 const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 const path = require('path');
-const { Server } = require('ws');
 
 // Create Express app
 const app = express();
@@ -26,10 +25,13 @@ app.get('/player', (req, res) => {
 });
 
 // Create HTTP server
-const server = http.createServer(app);
-
-// Create WebSocket server
-const wss = process.env.VERCEL ? new Server({ path: "/ws" }) : new WebSocket.Server({ server });
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.VERCEL_URL || "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
 
 // Game state with fiqh/thaharah questions
 let gameState = {
